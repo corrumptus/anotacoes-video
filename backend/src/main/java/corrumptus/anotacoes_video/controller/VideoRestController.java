@@ -40,6 +40,10 @@ public class VideoRestController {
     @Autowired
     private UserRepository userRepository;
 
+    private String VIDEO_FOLDER = "videos";
+
+    private int MAX_SIZE = 100 * 1024 * 1024;
+
     @GetMapping("/{id}")
     public ResponseEntity<VideoResponseDTO> getVideo(@PathVariable("id") String id) {
         Optional<VideoResponseDTO> response = videoRepository.findById(id)
@@ -86,17 +90,15 @@ public class VideoRestController {
         )
             throw new IllegalArgumentException("Video must be of type mp4 or webm");
 
-        int tamanhoMaximo = 100 * 1024 * 1024;
-
-        if (request.video().getSize() > tamanhoMaximo)
+        if (request.video().getSize() > MAX_SIZE)
             throw new IllegalArgumentException("Video is bigger than 100MB");
 
-        String videoName = request.ownerId() + "-" + UUID.randomUUID();
-        Path videoPath = Paths.get("videos", videoName);
+        String videoFileName = request.ownerId() + "-" + UUID.randomUUID();
+        Path videoPath = Paths.get(VIDEO_FOLDER, videoFileName);
         request.video().transferTo(videoPath.toFile());
 
         Video videoFromRequest = new Video(
-            videoName,
+            videoFileName,
             UserMapper.toModel(owner.get()),
             request.title(),
             request.description()
@@ -119,7 +121,7 @@ public class VideoRestController {
 
         videoRepository.delete(video.get());
 
-        Path path = Paths.get("videos", video.get().getPath());
+        Path path = Paths.get(VIDEO_FOLDER, video.get().getPath());
 
         Files.delete(path);
 

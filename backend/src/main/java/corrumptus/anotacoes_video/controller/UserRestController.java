@@ -41,6 +41,8 @@ public class UserRestController {
 
     private String PROFILE_PIC_FOLDER = "profile-pics";
 
+    private int MAX_SIZE = 100 * 1024 * 1024;
+
     @PostMapping("/login")
     public ResponseEntity<TokenJWTResponse> login(@RequestBody @Valid UserLoginDTO login) {
         UsernamePasswordAuthenticationToken token =
@@ -75,8 +77,6 @@ public class UserRestController {
                 )
             )
                 throw new IllegalArgumentException("Profile picture must be of type png or jpg");
-    
-            int MAX_SIZE = 10 * 1024 * 1024;
     
             if (signup.profilePic().getSize() > MAX_SIZE)
                 throw new IllegalArgumentException("Video is bigger than 10MB");
