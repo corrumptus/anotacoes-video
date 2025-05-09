@@ -7,14 +7,16 @@ import lombok.Getter;
 @Getter
 public class User {
     private String id;
-    private String name;
+    private String login;
     private String password;
+    private String name;
     private String profilePicPath;
 
-    public User(String name, String password, String profilePicPath) {
+    public User(String login, String password, String name, String profilePicPath) {
         this.id = null;
-        this.name = name;
+        this.login = login;
         this.password = password;
+        this.name = name;
         this.profilePicPath = profilePicPath;
     }
 }
