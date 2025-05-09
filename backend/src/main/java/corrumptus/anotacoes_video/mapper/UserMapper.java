@@ -10,8 +10,9 @@ public class UserMapper {
 
         return new UserEntity(
             model.getId(),
-            model.getName(),
+            model.getLogin(),
             model.getPassword(),
+            model.getName(),
             model.getProfilePicPath()
         );
     }
@@ -22,8 +23,9 @@ public class UserMapper {
 
         return new User(
             entity.getId(),
-            entity.getName(),
+            entity.getLogin(),
             entity.getPassword(),
+            entity.getName(),
             entity.getProfilePicPath()
         );
     }
