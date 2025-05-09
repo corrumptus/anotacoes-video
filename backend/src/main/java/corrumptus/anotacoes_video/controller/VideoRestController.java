@@ -30,6 +30,7 @@ import corrumptus.anotacoes_video.model.Video;
 import corrumptus.anotacoes_video.repository.UserRepository;
 import corrumptus.anotacoes_video.repository.VideoRepository;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/video")
@@ -68,7 +69,7 @@ public class VideoRestController {
 
     @PostMapping
     public ResponseEntity<VideoResponseDTO> newVideo(
-        @RequestBody NewVideoDTO request,
+        @RequestBody @Valid NewVideoDTO request,
         UriComponentsBuilder uriBuilder
     ) throws Exception {
         Optional<UserEntity> owner = userRepository.findById(request.ownerId());
