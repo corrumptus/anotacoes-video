@@ -1,6 +1,7 @@
 package corrumptus.anotacoes_video.controller;
 
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -110,8 +111,17 @@ public class VideoRestController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Object> deleteVideo(@PathVariable("id") String id) {
-        videoRepository.deleteById(id);
+    public ResponseEntity<Object> deleteVideo(@PathVariable("id") String id) throws Exception {
+        Optional<VideoEntity> video = videoRepository.findById(id);
+
+        if (video.isEmpty())
+            throw new EntityNotFoundException("Video doesnt exists");
+
+        videoRepository.delete(video.get());
+
+        Path path = Paths.get("videos", video.get().getPath());
+
+        Files.delete(path);
 
         return ResponseEntity.noContent().build();
     }
