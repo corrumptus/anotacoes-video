@@ -1,32 +1,19 @@
 package corrumptus.anotacoes_video.mapper;
 
-import corrumptus.anotacoes_video.entity.UserEntity;
-import corrumptus.anotacoes_video.model.User;
+import corrumptus.anotacoes_video.dto.user.NewUserDTO;
+import corrumptus.anotacoes_video.entity.User;
 
 public class UserMapper {
-    public static UserEntity toEntity(User model) {
-        if (model == null)
-            return null;
-
-        return new UserEntity(
-            model.getId(),
-            model.getLogin(),
-            model.getPassword(),
-            model.getName(),
-            model.getProfilePicPath()
-        );
-    }
-
-    public static User toModel(UserEntity entity) {
-        if (entity == null)
+    public static User toEntity(NewUserDTO dto, String profilePicPath) {
+        if (dto == null)
             return null;
 
         return new User(
-            entity.getId(),
-            entity.getLogin(),
-            entity.getPassword(),
-            entity.getName(),
-            entity.getProfilePicPath()
+            null,
+            dto.login(),
+            dto.password(),
+            dto.name(),
+            profilePicPath
         );
     }
 }

@@ -4,7 +4,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.constraints.NotBlank;
 
-public record UserSignUpDTO(
+public record NewUserDTO(
     @NotBlank
     String login,
 

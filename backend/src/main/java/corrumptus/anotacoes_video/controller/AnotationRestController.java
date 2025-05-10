@@ -17,13 +17,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import corrumptus.anotacoes_video.dto.anotation.AnotationResponseDTO;
 import corrumptus.anotacoes_video.dto.anotation.NewAnotationDTO;
-import corrumptus.anotacoes_video.entity.AnotationEntity;
-import corrumptus.anotacoes_video.entity.UserEntity;
-import corrumptus.anotacoes_video.entity.VideoEntity;
+import corrumptus.anotacoes_video.entity.Anotation;
+import corrumptus.anotacoes_video.entity.User;
+import corrumptus.anotacoes_video.entity.Video;
 import corrumptus.anotacoes_video.mapper.AnotationMapper;
 import corrumptus.anotacoes_video.mapper.UserMapper;
 import corrumptus.anotacoes_video.mapper.VideoMapper;
-import corrumptus.anotacoes_video.model.Anotation;
 import corrumptus.anotacoes_video.repository.AnotationRepository;
 import corrumptus.anotacoes_video.repository.UserRepository;
 import corrumptus.anotacoes_video.repository.VideoRepository;
@@ -47,7 +46,7 @@ public class AnotationRestController {
         @RequestParam("video") String videoId
     ) {
         List<AnotationResponseDTO> anotations = anotationRepository.findAllByVideoId(videoId)
-            .stream().map(AnotationMapper::toResponseFromEntity).toList();
+            .stream().map(AnotationMapper::toResponse).toList();
 
         if (anotations.isEmpty())
             return ResponseEntity.noContent().build();
@@ -59,12 +58,12 @@ public class AnotationRestController {
     public ResponseEntity<AnotationResponseDTO> newAnotation(
         @RequestBody @Valid NewAnotationDTO request
     ) {
-        Optional<UserEntity> user = userRepository.findById(request.userId());
+        Optional<User> user = userRepository.findById(request.userId());
 
         if (user.isEmpty())
             throw new EntityNotFoundException("User doesnt exists");
 
-        Optional<VideoEntity> video = videoRepository.findById(request.videoId());
+        Optional<Video> video = videoRepository.findById(request.videoId());
 
         if (video.isEmpty())
             throw new EntityNotFoundException("Video doesnt exists");
@@ -72,18 +71,13 @@ public class AnotationRestController {
         if (request.videoInstant() > video.get().getTime())
             throw new IllegalArgumentException("Video has less time than the anotation video instant");
 
-        Anotation anotationFromRequest = new Anotation(
-            UserMapper.toModel(user.get()),
-            VideoMapper.toModel(video.get()),
-            request.anotation(),
-            request.videoInstant()
+        Anotation newAnotation = anotationRepository.save(
+            AnotationMapper.toEntity(request, user.get(), video.get())
         );
-
-        AnotationEntity newAnotation = anotationRepository.save(AnotationMapper.toEntity(anotationFromRequest));
 
         return ResponseEntity
             .status(HttpStatus.CREATED)
-            .body(AnotationMapper.toResponseFromEntity(newAnotation));
+            .body(AnotationMapper.toResponse(newAnotation));
     }
 
     @DeleteMapping("/{id}")

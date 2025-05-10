@@ -17,10 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import corrumptus.anotacoes_video.dto.user.UserLoginDTO;
-import corrumptus.anotacoes_video.dto.user.UserSignUpDTO;
-import corrumptus.anotacoes_video.entity.UserEntity;
+import corrumptus.anotacoes_video.dto.user.NewUserDTO;
+import corrumptus.anotacoes_video.entity.User;
 import corrumptus.anotacoes_video.mapper.UserMapper;
-import corrumptus.anotacoes_video.model.User;
 import corrumptus.anotacoes_video.repository.UserRepository;
 import corrumptus.anotacoes_video.utils.authentication.TokenJWTResponse;
 import corrumptus.anotacoes_video.utils.authentication.UserTokenJWT;
@@ -50,7 +49,7 @@ public class UserRestController {
 
         Authentication authentication = manager.authenticate(token);
 
-        UserEntity user = (UserEntity) authentication.getPrincipal();
+        User user = (User) authentication.getPrincipal();
 
         String tokenJWT = tokenService.newToken(user);
 
@@ -60,40 +59,33 @@ public class UserRestController {
 
     @PostMapping("/signup")
     public ResponseEntity<TokenJWTResponse> signup(
-        @RequestBody @Valid UserSignUpDTO signup,
+        @RequestBody @Valid NewUserDTO request,
         UriComponentsBuilder uriBuilder
     ) throws Exception {
-        if (userRepository.findByLogin(signup.login()).isPresent())
+        if (userRepository.findByLogin(request.login()).isPresent())
             throw new EntityExistsException("This user already exists");
 
-        if (!signup.profilePic().isEmpty()) {
+        if (!request.profilePic().isEmpty()) {
             if (
-                signup.profilePic().getContentType() != null
+                request.profilePic().getContentType() != null
                 &&
                 (
-                    signup.profilePic().getContentType() == "image/png"
+                    request.profilePic().getContentType() == "image/png"
                     ||
-                    signup.profilePic().getContentType() == "image/jpeg"
+                    request.profilePic().getContentType() == "image/jpeg"
                 )
             )
                 throw new IllegalArgumentException("Profile picture must be of type png or jpg");
     
-            if (signup.profilePic().getSize() > MAX_SIZE)
+            if (request.profilePic().getSize() > MAX_SIZE)
                 throw new IllegalArgumentException("Video is bigger than 10MB");
         }
 
-        String profilePicFileName = signup.login() + "-" + UUID.randomUUID();
+        String profilePicFileName = request.login() + "-" + UUID.randomUUID();
         Path profilePicPath = Paths.get(PROFILE_PIC_FOLDER, profilePicFileName);
-        signup.profilePic().transferTo(profilePicPath.toFile());
+        request.profilePic().transferTo(profilePicPath.toFile());
 
-        User userFromRequest = new User(
-            signup.login(),
-            signup.password(),
-            signup.name(),
-            profilePicFileName
-        );
-
-        UserEntity newUser = userRepository.save(UserMapper.toEntity(userFromRequest));
+        User newUser = userRepository.save(UserMapper.toEntity(request, profilePicFileName));
         URI uri = uriBuilder.path("/video/{id}").buildAndExpand(newUser.getId()).toUri();
 
         String tokenJWT = tokenService.newToken(newUser);

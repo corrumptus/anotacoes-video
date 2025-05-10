@@ -1,6 +1,6 @@
 package corrumptus.anotacoes_video.dto.video;
 
-import corrumptus.anotacoes_video.model.VideoVisibility;
+import corrumptus.anotacoes_video.entity.VideoVisibility;
 
 public record VideoResponseDTO(
     String id,

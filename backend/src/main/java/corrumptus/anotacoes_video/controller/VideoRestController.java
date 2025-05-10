@@ -22,11 +22,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import corrumptus.anotacoes_video.dto.video.NewVideoDTO;
 import corrumptus.anotacoes_video.dto.video.VideoResponseDTO;
-import corrumptus.anotacoes_video.entity.UserEntity;
-import corrumptus.anotacoes_video.entity.VideoEntity;
-import corrumptus.anotacoes_video.mapper.UserMapper;
+import corrumptus.anotacoes_video.entity.User;
+import corrumptus.anotacoes_video.entity.Video;
 import corrumptus.anotacoes_video.mapper.VideoMapper;
-import corrumptus.anotacoes_video.model.Video;
 import corrumptus.anotacoes_video.repository.UserRepository;
 import corrumptus.anotacoes_video.repository.VideoRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -45,21 +43,10 @@ public class VideoRestController {
 
     private int MAX_SIZE = 100 * 1024 * 1024;
 
-    @GetMapping("/{id}")
-    public ResponseEntity<VideoResponseDTO> getVideo(@PathVariable("id") String id) {
-        Optional<VideoResponseDTO> response = videoRepository.findById(id)
-            .map(VideoMapper::toResponseFromEntity);
-
-        if (response.isEmpty())
-            return ResponseEntity.notFound().build();
-
-        return ResponseEntity.ok(response.get());
-    }
-
     @GetMapping
     public ResponseEntity<List<VideoResponseDTO>> getUserVideos(@RequestParam("user") String userId) {
         List<VideoResponseDTO> videos = videoRepository.findByOwner(userId)
-            .stream().map(VideoMapper::toResponseFromEntity).toList();
+            .stream().map(VideoMapper::toResponse).toList();
 
         if (videos.isEmpty())
             return ResponseEntity.noContent().build();
@@ -67,12 +54,23 @@ public class VideoRestController {
         return ResponseEntity.ok(videos);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<VideoResponseDTO> getVideo(@PathVariable("id") String id) {
+        Optional<VideoResponseDTO> response = videoRepository.findById(id)
+            .map(VideoMapper::toResponse);
+
+        if (response.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        return ResponseEntity.ok(response.get());
+    }
+
     @PostMapping
     public ResponseEntity<VideoResponseDTO> newVideo(
         @RequestBody @Valid NewVideoDTO request,
         UriComponentsBuilder uriBuilder
     ) throws Exception {
-        Optional<UserEntity> owner = userRepository.findById(request.ownerId());
+        Optional<User> owner = userRepository.findById(request.ownerId());
 
         if (owner.isEmpty())
             throw new EntityNotFoundException("User " + request.ownerId() + " doesnt exists");
@@ -98,24 +96,17 @@ public class VideoRestController {
         Path videoPath = Paths.get(VIDEO_FOLDER, videoFileName);
         request.video().transferTo(videoPath.toFile());
 
-        Video videoFromRequest = new Video(
-            videoFileName,
-            UserMapper.toModel(owner.get()),
-            request.title(),
-            request.description()
-        );
-
-        VideoEntity newVideo = videoRepository.save(VideoMapper.toEntity(videoFromRequest));
+        Video newVideo = videoRepository.save(VideoMapper.toEntity(request, videoFileName, owner.get()));
         URI uri = uriBuilder.path("/video/{id}").buildAndExpand(newVideo.getId()).toUri();
 
         return ResponseEntity
             .created(uri)
-            .body(VideoMapper.toResponseFromEntity(newVideo));
+            .body(VideoMapper.toResponse(newVideo));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> deleteVideo(@PathVariable("id") String id) throws Exception {
-        Optional<VideoEntity> video = videoRepository.findById(id);
+        Optional<Video> video = videoRepository.findById(id);
 
         if (video.isEmpty())
             throw new EntityNotFoundException("Video doesnt exists");

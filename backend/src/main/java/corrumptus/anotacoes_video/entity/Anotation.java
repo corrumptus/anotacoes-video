@@ -10,14 +10,14 @@ import lombok.Getter;
 @RelationshipProperties
 @AllArgsConstructor
 @Getter
-public class AnotationEntity {
+public class Anotation {
     @RelationshipId
     private String id;
 
-    private UserEntity user;
+    private User user;
 
     @TargetNode
-    private VideoEntity video;
+    private Video video;
 
     private String anotation;
 

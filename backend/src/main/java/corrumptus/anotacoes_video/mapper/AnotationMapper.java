@@ -1,37 +1,26 @@
 package corrumptus.anotacoes_video.mapper;
 
 import corrumptus.anotacoes_video.dto.anotation.AnotationResponseDTO;
-import corrumptus.anotacoes_video.entity.AnotationEntity;
-import corrumptus.anotacoes_video.model.Anotation;
+import corrumptus.anotacoes_video.dto.anotation.NewAnotationDTO;
+import corrumptus.anotacoes_video.entity.Anotation;
+import corrumptus.anotacoes_video.entity.User;
+import corrumptus.anotacoes_video.entity.Video;
 
 public class AnotationMapper {
-    public static Anotation toModel(AnotationEntity entity) {
-        if (entity == null)
+    public static Anotation toEntity(NewAnotationDTO dto, User user, Video video) {
+        if (dto == null)
             return null;
 
         return new Anotation(
-            entity.getId(),
-            UserMapper.toModel(entity.getUser()),
-            VideoMapper.toModel(entity.getVideo()),
-            entity.getAnotation(),
-            entity.getVideoInstant()
+            null,
+            user,
+            video,
+            dto.anotation(),
+            dto.videoInstant()
         );
     }
 
-    public static AnotationEntity toEntity(Anotation model) {
-        if (model == null)
-            return null;
-
-        return new AnotationEntity(
-            model.getId(),
-            UserMapper.toEntity(model.getUser()),
-            VideoMapper.toEntity(model.getVideo()),
-            model.getAnotation(),
-            model.getVideoInstant()
-        );
-    }
-
-    public static AnotationResponseDTO toResponseFromEntity(AnotationEntity entity) {
+    public static AnotationResponseDTO toResponse(Anotation entity) {
         if (entity == null)
             return null;
 
@@ -41,19 +30,6 @@ public class AnotationMapper {
             entity.getVideo().getId(),
             entity.getAnotation(),
             entity.getVideoInstant()
-        );
-    }
-
-    public static AnotationResponseDTO toResponseFromModel(Anotation model) {
-        if (model == null)
-            return null;
-
-        return new AnotationResponseDTO(
-            model.getId(),
-            model.getUser().getId(),
-            model.getVideo().getId(),
-            model.getAnotation(),
-            model.getVideoInstant()
         );
     }
 }

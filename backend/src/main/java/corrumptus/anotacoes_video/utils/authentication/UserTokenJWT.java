@@ -11,7 +11,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 
-import corrumptus.anotacoes_video.entity.UserEntity;
+import corrumptus.anotacoes_video.entity.User;
 
 @Service
 public class UserTokenJWT {
@@ -20,7 +20,7 @@ public class UserTokenJWT {
 
     private String PROJECT_ISSUER = "video-anotações";
 
-    public String newToken(UserEntity usuario) {
+    public String newToken(User usuario) {
         var algoritmo = Algorithm.HMAC256(secret);
 
         String token = JWT.create()

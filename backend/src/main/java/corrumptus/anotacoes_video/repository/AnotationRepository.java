@@ -7,9 +7,9 @@ import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.lang.NonNull;
 
-import corrumptus.anotacoes_video.entity.AnotationEntity;
+import corrumptus.anotacoes_video.entity.Anotation;
 
-public interface AnotationRepository extends Neo4jRepository<AnotationEntity, String> {
+public interface AnotationRepository extends Neo4jRepository<Anotation, String> {
     @Override
     @Query("""
         MATCH
@@ -28,7 +28,7 @@ public interface AnotationRepository extends Neo4jRepository<AnotationEntity, St
             anotation.videoInstant as videoInstant
     """)
     @NonNull
-    public <A extends AnotationEntity> A save(@Param("anotation") @NonNull A anotation);
+    public <A extends Anotation> A save(@Param("anotation") @NonNull A anotation);
 
     @Query("""
        MATCH (user:USER) - [anotation:ANOTATION] -> (video:VIDEO { id: $videoId })
@@ -39,7 +39,7 @@ public interface AnotationRepository extends Neo4jRepository<AnotationEntity, St
             anotation.anotation as anotation,
             anotation.videoInstant as videoInstant
     """)
-    public List<AnotationEntity> findAllByVideoId(@Param("videoId") String videoId);
+    public List<Anotation> findAllByVideoId(@Param("videoId") String videoId);
 
     @Query("""
         MATCH (:USER) - [anotation:ANOTATION { id: $id }] -> (:VIDEO)

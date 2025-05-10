@@ -7,9 +7,9 @@ import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import corrumptus.anotacoes_video.entity.UserEntity;
+import corrumptus.anotacoes_video.entity.User;
 
-public interface UserRepository extends Neo4jRepository<UserEntity, String> {
+public interface UserRepository extends Neo4jRepository<User, String> {
     @Query("""
         MATCH (user:USER)
         WHERE user.login = $login

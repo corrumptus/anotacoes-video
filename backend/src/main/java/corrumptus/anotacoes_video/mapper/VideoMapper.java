@@ -1,41 +1,28 @@
 package corrumptus.anotacoes_video.mapper;
 
+import corrumptus.anotacoes_video.dto.video.NewVideoDTO;
 import corrumptus.anotacoes_video.dto.video.VideoResponseDTO;
-import corrumptus.anotacoes_video.entity.VideoEntity;
-import corrumptus.anotacoes_video.model.Video;
+import corrumptus.anotacoes_video.entity.User;
+import corrumptus.anotacoes_video.entity.Video;
+import corrumptus.anotacoes_video.entity.VideoVisibility;
 
 public class VideoMapper {
-    public static VideoEntity toEntity(Video model) {
+    public static Video toEntity(NewVideoDTO model, String path, User user) {
         if (model == null)
             return null;
 
-        return new VideoEntity(
-            model.getId(),
-            model.getPath(),
-            UserMapper.toEntity(model.getOwner()),
-            model.getTitle(),
-            model.getDescription(),
-            model.getVisibility(),
-            model.isVisitantCanAnotate()
-        );
-    }
-
-    public static Video toModel(VideoEntity entity) {
-        if (entity == null)
-            return null;
-
         return new Video(
-            entity.getId(),
-            entity.getPath(),
-            UserMapper.toModel(entity.getOwner()),
-            entity.getTitle(),
-            entity.getDescription(),
-            entity.getVisibility(),
-            entity.isVisitantCanAnotate()
+            null,
+            path,
+            user,
+            model.title(),
+            model.description(),
+            VideoVisibility.PRIVATE,
+            false
         );
     }
 
-    public static VideoResponseDTO toResponseFromModel(Video model) {
+    public static VideoResponseDTO toResponse(Video model) {
         if (model == null)
             return null;
 
@@ -49,23 +36,6 @@ public class VideoMapper {
             model.getDescription(),
             model.getVisibility(),
             model.isVisitantCanAnotate()
-        );
-    }
-    
-    public static VideoResponseDTO toResponseFromEntity(VideoEntity entity) {
-        if (entity == null)
-            return null;
-
-        return new VideoResponseDTO(
-            entity.getId(),
-            entity.getPath(),
-            entity.getOwner().getId(),
-            entity.getOwner().getName(),
-            entity.getOwner().getProfilePicPath(),
-            entity.getTitle(),
-            entity.getDescription(),
-            entity.getVisibility(),
-            entity.isVisitantCanAnotate()
         );
     }
 }
