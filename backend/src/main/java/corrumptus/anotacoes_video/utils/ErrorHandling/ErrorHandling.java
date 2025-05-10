@@ -4,6 +4,8 @@ import java.io.IOException;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -14,6 +16,13 @@ import jakarta.persistence.EntityNotFoundException;
 
 @RestControllerAdvice
 public class ErrorHandling {
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ExceptionResponse> bodySerializationHandling(HttpMessageNotReadableException ex) {
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(new ExceptionResponse(ex.getMessage()));
+    }
+
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ExceptionResponse> notFoundHandling(EntityNotFoundException ex) {
         return ResponseEntity
@@ -47,6 +56,13 @@ public class ErrorHandling {
         return ResponseEntity
             .status(HttpStatus.FORBIDDEN)
             .body(new ExceptionResponse("Invalid Token JWT"));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ExceptionResponse> accessDeniedHandling(AccessDeniedException ex) {
+        return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
+            .body(new ExceptionResponse(ex.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)
