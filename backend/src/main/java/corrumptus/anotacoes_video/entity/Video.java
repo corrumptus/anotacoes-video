@@ -28,6 +28,10 @@ public class Video {
 
     private String description;
 
+    private String type;
+
+    private long duration;
+
     private VideoVisibility visibility;
 
     private boolean visitantCanAnotate;

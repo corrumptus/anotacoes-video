@@ -4,12 +4,13 @@ import corrumptus.anotacoes_video.entity.VideoVisibility;
 
 public record VideoResponseDTO(
     String id,
-    String path,
     String ownerId,
     String ownerName,
     String ownerProfilePicPath,
     String title,
     String description,
+    String type,
+    long duration,
     VideoVisibility visibility,
     boolean visitantCanAnotate
 ) {

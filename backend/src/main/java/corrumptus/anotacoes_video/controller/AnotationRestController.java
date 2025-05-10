@@ -21,8 +21,6 @@ import corrumptus.anotacoes_video.entity.Anotation;
 import corrumptus.anotacoes_video.entity.User;
 import corrumptus.anotacoes_video.entity.Video;
 import corrumptus.anotacoes_video.mapper.AnotationMapper;
-import corrumptus.anotacoes_video.mapper.UserMapper;
-import corrumptus.anotacoes_video.mapper.VideoMapper;
 import corrumptus.anotacoes_video.repository.AnotationRepository;
 import corrumptus.anotacoes_video.repository.UserRepository;
 import corrumptus.anotacoes_video.repository.VideoRepository;
@@ -68,7 +66,7 @@ public class AnotationRestController {
         if (video.isEmpty())
             throw new EntityNotFoundException("Video doesnt exists");
 
-        if (request.videoInstant() > video.get().getTime())
+        if (request.videoInstant() > video.get().getDuration())
             throw new IllegalArgumentException("Video has less time than the anotation video instant");
 
         Anotation newAnotation = anotationRepository.save(

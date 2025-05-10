@@ -1,5 +1,6 @@
 package corrumptus.anotacoes_video.controller;
 
+import java.io.File;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -9,6 +10,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -96,7 +100,15 @@ public class VideoRestController {
         Path videoPath = Paths.get(VIDEO_FOLDER, videoFileName);
         request.video().transferTo(videoPath.toFile());
 
-        Video newVideo = videoRepository.save(VideoMapper.toEntity(request, videoFileName, owner.get()));
+        Video newVideo = videoRepository.save(
+            VideoMapper.toEntity(
+                request,
+                videoFileName,
+                request.video().getContentType(),
+                0,
+                owner.get()
+            )
+        );
         URI uri = uriBuilder.path("/video/{id}").buildAndExpand(newVideo.getId()).toUri();
 
         return ResponseEntity
@@ -118,5 +130,26 @@ public class VideoRestController {
         Files.delete(path);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/video")
+    public ResponseEntity<Resource> getVideoResource(@PathVariable("id") String id) {
+        Optional<Video> videoEntity = videoRepository.findById(id);
+
+        if (videoEntity.isEmpty())
+            throw new EntityNotFoundException("Video doesnt exists");
+
+        Path path = Paths.get(VIDEO_FOLDER, videoEntity.get().getPath());
+
+        File file = path.toFile();
+        long fileLength = file.length();
+
+        Resource video = new FileSystemResource(file);
+
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_TYPE, videoEntity.get().getType())
+            .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(fileLength))
+            .header(HttpHeaders.ACCEPT_RANGES, "bytes")
+            .body(video);
     }
 }

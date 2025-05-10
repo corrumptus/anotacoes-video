@@ -7,7 +7,13 @@ import corrumptus.anotacoes_video.entity.Video;
 import corrumptus.anotacoes_video.entity.VideoVisibility;
 
 public class VideoMapper {
-    public static Video toEntity(NewVideoDTO model, String path, User user) {
+    public static Video toEntity(
+        NewVideoDTO model,
+        String path,
+        String type,
+        long duration,
+        User user
+    ) {
         if (model == null)
             return null;
 
@@ -17,6 +23,8 @@ public class VideoMapper {
             user,
             model.title(),
             model.description(),
+            type,
+            duration,
             VideoVisibility.PRIVATE,
             false
         );
@@ -28,12 +36,13 @@ public class VideoMapper {
 
         return new VideoResponseDTO(
             model.getId(),
-            model.getPath(),
             model.getOwner().getId(),
             model.getOwner().getName(),
             model.getOwner().getProfilePicPath(),
             model.getTitle(),
             model.getDescription(),
+            model.getType(),
+            model.getDuration(),
             model.getVisibility(),
             model.isVisitantCanAnotate()
         );
