@@ -35,4 +35,12 @@ public class Video {
     private VideoVisibility visibility;
 
     private boolean visitantCanAnotate;
+
+    public void setVisibility(VideoVisibility visibility) {
+        this.visibility = visibility;
+    }
+
+    public void setVisitantCanAnotate(boolean visitantCanAnotate) {
+        this.visitantCanAnotate = visitantCanAnotate;
+    }
 }
