@@ -1,7 +1,6 @@
 package corrumptus.anotacoes_video.controller;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -56,21 +55,17 @@ public class AnotationRestController {
     public ResponseEntity<AnotationResponseDTO> newAnotation(
         @RequestBody @Valid NewAnotationDTO request
     ) {
-        Optional<User> user = userRepository.findById(request.userId());
+        User user = userRepository.findById(request.userId())
+            .orElseThrow(() -> new EntityNotFoundException("User doesnt exists"));
 
-        if (user.isEmpty())
-            throw new EntityNotFoundException("User doesnt exists");
+        Video video = videoRepository.findById(request.videoId())
+            .orElseThrow(() -> new EntityNotFoundException("Video doesnt exists"));
 
-        Optional<Video> video = videoRepository.findById(request.videoId());
-
-        if (video.isEmpty())
-            throw new EntityNotFoundException("Video doesnt exists");
-
-        if (request.videoInstant() > video.get().getDuration())
+        if (request.videoInstant() > video.getDuration())
             throw new IllegalArgumentException("Video has less time than the anotation video instant");
 
         Anotation newAnotation = anotationRepository.save(
-            AnotationMapper.toEntity(request, user.get(), video.get())
+            AnotationMapper.toEntity(request, user, video)
         );
 
         return ResponseEntity

@@ -6,7 +6,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,13 +59,11 @@ public class VideoRestController {
 
     @GetMapping("/{id}")
     public ResponseEntity<VideoResponseDTO> getVideo(@PathVariable("id") String id) {
-        Optional<VideoResponseDTO> response = videoRepository.findById(id)
-            .map(VideoMapper::toResponse);
+        VideoResponseDTO response = videoRepository.findById(id)
+            .map(VideoMapper::toResponse)
+            .orElseThrow(() -> new EntityNotFoundException("Video doesnt exists"));
 
-        if (response.isEmpty())
-            return ResponseEntity.notFound().build();
-
-        return ResponseEntity.ok(response.get());
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping
@@ -74,10 +71,8 @@ public class VideoRestController {
         @RequestBody @Valid NewVideoDTO request,
         UriComponentsBuilder uriBuilder
     ) throws Exception {
-        Optional<User> owner = userRepository.findById(request.ownerId());
-
-        if (owner.isEmpty())
-            throw new EntityNotFoundException("User " + request.ownerId() + " doesnt exists");
+        User owner = userRepository.findById(request.ownerId())
+            .orElseThrow(() -> new EntityNotFoundException("User doesnt exists"));
 
         if (request.video().isEmpty())
             throw new IllegalArgumentException("Video is empty");
@@ -106,7 +101,7 @@ public class VideoRestController {
                 videoFileName,
                 request.video().getContentType(),
                 0,
-                owner.get()
+                owner
             )
         );
         URI uri = uriBuilder.path("/video/{id}").buildAndExpand(newVideo.getId()).toUri();
@@ -118,14 +113,12 @@ public class VideoRestController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> deleteVideo(@PathVariable("id") String id) throws Exception {
-        Optional<Video> video = videoRepository.findById(id);
+        Video video = videoRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("Video doesnt exists"));
 
-        if (video.isEmpty())
-            throw new EntityNotFoundException("Video doesnt exists");
+        videoRepository.delete(video);
 
-        videoRepository.delete(video.get());
-
-        Path path = Paths.get(VIDEO_FOLDER, video.get().getPath());
+        Path path = Paths.get(VIDEO_FOLDER, video.getPath());
 
         Files.delete(path);
 
@@ -134,12 +127,10 @@ public class VideoRestController {
 
     @GetMapping("/{id}/video")
     public ResponseEntity<Resource> getVideoResource(@PathVariable("id") String id) {
-        Optional<Video> videoEntity = videoRepository.findById(id);
+        Video videoEntity = videoRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("Video doesnt exists"));
 
-        if (videoEntity.isEmpty())
-            throw new EntityNotFoundException("Video doesnt exists");
-
-        Path path = Paths.get(VIDEO_FOLDER, videoEntity.get().getPath());
+        Path path = Paths.get(VIDEO_FOLDER, videoEntity.getPath());
 
         File file = path.toFile();
         long fileLength = file.length();
@@ -147,7 +138,7 @@ public class VideoRestController {
         Resource video = new FileSystemResource(file);
 
         return ResponseEntity.ok()
-            .header(HttpHeaders.CONTENT_TYPE, videoEntity.get().getType())
+            .header(HttpHeaders.CONTENT_TYPE, videoEntity.getType())
             .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(fileLength))
             .header(HttpHeaders.ACCEPT_RANGES, "bytes")
             .body(video);
