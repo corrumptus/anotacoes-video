@@ -14,13 +14,13 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
-import corrumptus.anotacoes_video.utils.authentication.SecurityFilter;
+import corrumptus.anotacoes_video.utils.authentication.AuthenticationFilter;
  
 @Configuration
 @EnableWebSecurity
 public class SecurityConfigurations {
     @Autowired
-    private SecurityFilter securityFilter;
+    private AuthenticationFilter authenticationFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -32,7 +32,10 @@ public class SecurityConfigurations {
                 req.requestMatchers(AntPathRequestMatcher.antMatcher("/user")).permitAll();
                 req.anyRequest().authenticated();
             })
-            .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(
+                authenticationFilter,
+                UsernamePasswordAuthenticationFilter.class
+            )
             .build();
     }
 
