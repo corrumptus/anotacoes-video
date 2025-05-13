@@ -30,6 +30,7 @@ import corrumptus.anotacoes_video.entity.Video;
 import corrumptus.anotacoes_video.mapper.VideoMapper;
 import corrumptus.anotacoes_video.repository.UserRepository;
 import corrumptus.anotacoes_video.repository.VideoRepository;
+import corrumptus.anotacoes_video.utils.mideaHandling.VideoService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 
@@ -41,6 +42,9 @@ public class VideoRestController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private VideoService videoService;
 
     private String VIDEO_FOLDER = "videos";
 
@@ -95,12 +99,14 @@ public class VideoRestController {
         Path videoPath = Paths.get(VIDEO_FOLDER, videoFileName);
         request.video().transferTo(videoPath.toFile());
 
+        long duration = videoService.getVideoDuration(request.video());
+
         Video newVideo = videoRepository.save(
             VideoMapper.toEntity(
                 request,
                 videoFileName,
                 request.video().getContentType(),
-                0,
+                duration,
                 owner
             )
         );
