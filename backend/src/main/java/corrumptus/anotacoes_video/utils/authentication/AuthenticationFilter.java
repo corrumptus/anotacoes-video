@@ -10,12 +10,13 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import corrumptus.anotacoes_video.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
+import corrumptus.anotacoes_video.repository.UserRepository;
 
 @Component
 public class AuthenticationFilter extends OncePerRequestFilter {
@@ -39,7 +40,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             String userLogin = tokenService.getTokenSubject(token);
 
             UserDetails user = userRepository.findByLogin(userLogin)
-                .orElseThrow(() -> new EntityNotFoundException("User dont exist"));
+                .orElseThrow(() -> new EntityNotFoundException("User doesn't exist"));
 
             UsernamePasswordAuthenticationToken authentication =
                 new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
