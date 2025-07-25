@@ -16,9 +16,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Node("USER")
-@Getter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
+@Getter
 public class User implements UserDetails {
     @Id
     @GeneratedValue(generatorClass = UUIDStringGenerator.class)
@@ -28,9 +28,9 @@ public class User implements UserDetails {
 
     private String password;
 
-    private String name;
-
     private String profilePicPath;
+
+    private String profilePicType;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
