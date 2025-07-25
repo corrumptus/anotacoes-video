@@ -4,16 +4,20 @@ import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
+import org.springframework.data.neo4j.core.schema.Relationship.Direction;
 import org.springframework.data.neo4j.core.support.UUIDStringGenerator;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import corrumptus.anotacoes_video.dto.video.VideoUpdateDTO;
 
 @Node("VIDEO")
-@Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
 public class Video {
     @Id
     @GeneratedValue(generatorClass = UUIDStringGenerator.class)
@@ -21,7 +25,7 @@ public class Video {
 
     private String path;
 
-    @Relationship(value = "OWNS")
+    @Relationship(value = "OWNS", direction = Direction.INCOMING)
     private User owner;
 
     private String title;
@@ -32,15 +36,17 @@ public class Video {
 
     private long duration;
 
-    private VideoVisibility visibility;
+    @Setter
+    private Visibility visibility;
 
-    private boolean visitantCanAnotate;
+    @Setter
+    private Boolean publicCanAnotate;
 
-    public void setVisibility(VideoVisibility visibility) {
-        this.visibility = visibility;
-    }
+    public void update(VideoUpdateDTO dto) {
+        if (dto.title() != null)
+            this.title = dto.title();
 
-    public void setVisitantCanAnotate(boolean visitantCanAnotate) {
-        this.visitantCanAnotate = visitantCanAnotate;
+        if (dto.description() != null)
+            this.description = dto.description();
     }
 }
