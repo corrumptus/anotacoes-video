@@ -1,5 +1,6 @@
 package corrumptus.anotacoes_video.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.neo4j.repository.Neo4jRepository;
@@ -16,4 +17,11 @@ public interface UserRepository extends Neo4jRepository<User, String> {
         RETURN user
     """)
     Optional<UserDetails> findByLogin(@Param("login") String login);
+
+    @Query("""
+        MATCH (u:USER)
+        WHERE u.login CONTAINS $subLogin
+        RETURN u
+    """)
+    List<UserDetails> findBySubLogin(@Param("subLogin") String subLogin);
 }
