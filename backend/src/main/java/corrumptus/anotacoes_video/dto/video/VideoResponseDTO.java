@@ -1,18 +1,14 @@
 package corrumptus.anotacoes_video.dto.video;
 
-import corrumptus.anotacoes_video.entity.VideoVisibility;
+import corrumptus.anotacoes_video.dto.video_permissions.VideoVisibilityResponseDTO;
 
 public record VideoResponseDTO(
     String id,
-    String ownerId,
     String ownerName,
-    String ownerProfilePicPath,
     String title,
     String description,
-    String type,
     long duration,
-    VideoVisibility visibility,
-    boolean visitantCanAnotate
+    VideoVisibilityResponseDTO visibility
 ) {
     
 }

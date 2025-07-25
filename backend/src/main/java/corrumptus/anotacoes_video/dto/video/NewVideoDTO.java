@@ -3,18 +3,19 @@ package corrumptus.anotacoes_video.dto.video;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public record NewVideoDTO(
-    MultipartFile video,
-
-    @NotBlank
+    @NotNull(message = "The title field is missing")
+    @NotBlank(message = "The title field must be a non-empty string")
     String title,
 
-    @NotBlank
+    @NotNull(message = "The description field is missing")
+    @NotBlank(message = "The description field must be a non-empty string")
     String description,
-    
-    @NotBlank
-    String ownerId
+
+    @NotNull(message = "The video field is missing")
+    MultipartFile video
 ) {
     
 }
