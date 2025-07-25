@@ -9,13 +9,13 @@ import org.springframework.stereotype.Service;
 import corrumptus.anotacoes_video.repository.UserRepository;
 
 @Service
-public class UserAuthentication implements UserDetailsService {
+public class UserAuthenticationService implements UserDetailsService {
     @Autowired
     private UserRepository userRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByLogin(username)
-            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+            .orElseThrow(() -> new UsernameNotFoundException("User doesn't exist"));
     }
 }
