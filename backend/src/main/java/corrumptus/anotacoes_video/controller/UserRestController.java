@@ -1,30 +1,48 @@
 package corrumptus.anotacoes_video.controller;
 
-import java.net.URI;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.util.UriComponentsBuilder;
+
+import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 
 import corrumptus.anotacoes_video.dto.user.UserLoginDTO;
+import corrumptus.anotacoes_video.dto.user.FindUserDTO;
 import corrumptus.anotacoes_video.dto.user.NewUserDTO;
 import corrumptus.anotacoes_video.entity.User;
 import corrumptus.anotacoes_video.mapper.UserMapper;
 import corrumptus.anotacoes_video.repository.UserRepository;
 import corrumptus.anotacoes_video.utils.authentication.TokenJWTResponse;
 import corrumptus.anotacoes_video.utils.authentication.UserTokenJWT;
-import jakarta.persistence.EntityExistsException;
-import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/user")
@@ -38,9 +56,30 @@ public class UserRestController {
     @Autowired
     private UserTokenJWT tokenService;
 
-    private String PROFILE_PIC_FOLDER = "profile-pics";
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
-    private int MAX_SIZE = 100 * 1024 * 1024;
+    private static final String PROFILE_PIC_FOLDER = "profile-pics";
+
+    private static final long MAX_SIZE = 5l * 1024l * 1024l;
+
+    public UserRestController() throws IOException {
+        Path folder = Paths.get(PROFILE_PIC_FOLDER);
+        if (!Files.exists(folder)) {
+            Files.createDirectories(folder);
+        }
+    }
+
+    @GetMapping
+    public ResponseEntity<List<FindUserDTO>> findUser(@RequestParam("sub") String subLogin) {
+        List<UserDetails> usersWithSubLogin = userRepository.findBySubLogin(subLogin);
+
+        return ResponseEntity.ok(
+            usersWithSubLogin.stream()
+                .map(u -> new FindUserDTO(((User) u).getId(), ((User) u).getLogin()))
+                .toList()
+        );
+    }
 
     @PostMapping("/login")
     public ResponseEntity<TokenJWTResponse> login(@RequestBody @Valid UserLoginDTO login) {
@@ -57,15 +96,14 @@ public class UserRestController {
             .ok(new TokenJWTResponse(tokenJWT));
     }
 
-    @PostMapping("/signup")
+    @PostMapping(value = "/signup", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<TokenJWTResponse> signup(
-        @RequestBody @Valid NewUserDTO request,
-        UriComponentsBuilder uriBuilder
-    ) throws Exception {
+        @ModelAttribute @Valid NewUserDTO request
+    ) throws IllegalStateException, IOException {
         if (userRepository.findByLogin(request.login()).isPresent())
             throw new EntityExistsException("This user already exists");
 
-        if (!request.profilePic().isEmpty()) {
+        if (request.profilePic() != null) {
             if (
                 request.profilePic().getContentType() != null
                 &&
@@ -81,17 +119,71 @@ public class UserRestController {
                 throw new IllegalArgumentException("Video is bigger than 10MB");
         }
 
-        String profilePicFileName = request.login() + "-" + UUID.randomUUID();
-        Path profilePicPath = Paths.get(PROFILE_PIC_FOLDER, profilePicFileName);
-        request.profilePic().transferTo(profilePicPath.toFile());
+        NewUserDTO encodedPasswordNewUser = UserMapper.encodePassword(
+            request,
+            passwordEncoder.encode(request.password())
+        );
 
-        User newUser = userRepository.save(UserMapper.toEntity(request, profilePicFileName));
-        URI uri = uriBuilder.path("/video/{id}").buildAndExpand(newUser.getId()).toUri();
+        String fileName = null;
+        String imageType = null;
+
+        if (request.profilePic() != null) {
+            imageType = request.profilePic().getContentType();
+            fileName = request.login() + "-" + UUID.randomUUID() + getExtension(imageType);
+
+            Files.copy(
+                request.profilePic().getInputStream(),
+                Paths.get(PROFILE_PIC_FOLDER, fileName),
+                StandardCopyOption.REPLACE_EXISTING
+            );
+        }
+
+        User newUser = userRepository.save(
+            UserMapper.toEntity(
+                encodedPasswordNewUser,
+                fileName,
+                imageType
+            )
+        );
 
         String tokenJWT = tokenService.newToken(newUser);
 
         return ResponseEntity
-            .created(uri)
-            .body(new TokenJWTResponse(tokenJWT));
+            .ok(new TokenJWTResponse(tokenJWT));
+    }
+
+    @GetMapping("/name")
+    public ResponseEntity<Map<String, String>> getSelfName(
+        @AuthenticationPrincipal User user
+    ) {
+        Map<String, String> response = new HashMap<String, String>();
+
+        response.put("name", user.getLogin());
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{login}/profilePic")
+    public ResponseEntity<Resource> getUserProfilePic(
+        @PathVariable("login") String login
+    ) {
+        User user = (User) userRepository.findByLogin(login)
+            .orElseThrow(() -> new EntityNotFoundException("User doesn't exist"));
+
+        Resource pic = new FileSystemResource(
+            Paths.get(PROFILE_PIC_FOLDER, user.getProfilePicPath()).toFile()
+        );
+
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_TYPE, user.getProfilePicType())
+            .body(pic);
+    }
+
+    private String getExtension(String fileType) {
+        return switch (fileType) {
+            case "image/png" -> ".png";
+            case "image/jpeg" -> ".jpg";
+            default -> throw new IllegalArgumentException("Suported file types: image/png or image/jpeg");
+        };
     }
 }
