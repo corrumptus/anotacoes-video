@@ -1,11 +1,13 @@
-package corrumptus.anotacoes_video.utils.ErrorHandling;
+package corrumptus.anotacoes_video.utils.errorhandling;
 
 import java.io.IOException;
 
+import org.bytedeco.javacv.FrameGrabber;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -47,8 +49,15 @@ public class ErrorHandling {
     @ExceptionHandler(IOException.class)
     public ResponseEntity<ExceptionResponse> ioHandling(IOException ex) {
         return ResponseEntity
-            .status(HttpStatus.NOT_FOUND)
-            .body(new ExceptionResponse("Video doesnt exists"));
+            .status(HttpStatus.BAD_REQUEST)
+            .body(new ExceptionResponse("Problem with the file"));
+    }
+
+    @ExceptionHandler(FrameGrabber.Exception.class)
+    public ResponseEntity<ExceptionResponse> ffmpegHandling(FrameGrabber.Exception ex) {
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(new ExceptionResponse("Problem with the video"));
     }
 
     @ExceptionHandler(JWTCreationException.class)
@@ -65,8 +74,15 @@ public class ErrorHandling {
             .body(new ExceptionResponse(ex.getMessage()));
     }
 
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ExceptionResponse> notValidHandling(MethodArgumentNotValidException ex) {
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(new ExceptionResponse(ex.getFieldError().getDefaultMessage()));
+    }
+
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ExceptionResponse> defaultResponse() {
+    public ResponseEntity<ExceptionResponse> defaultResponse(Exception e) {
         return ResponseEntity
             .internalServerError()
             .body(new ExceptionResponse("Some Error occured in the middle of the execution"));
